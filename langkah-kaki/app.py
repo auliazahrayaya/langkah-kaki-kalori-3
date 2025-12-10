@@ -3,125 +3,90 @@ import pandas as pd
 import numpy as np
 import altair as alt
 
-# --- PAGE CONFIG ---
-st.set_page_config(page_title="Interpolasi Langkah & Kalori", page_icon="👟", layout="wide")
+st.set_page_config(page_title="Interpolasi Langkah Kaki", page_icon="👟", layout="wide")
 
-st.title("👟 Dashboard Interpolasi Langkah Kaki & Kalori")
+st.title("👟 Dashboard Interpolasi Langkah Kaki")
 st.write("""
-Aplikasi ini membaca data langkah & kalori, mendeteksi nilai yang hilang,
-dan mengisi kekosongan tersebut menggunakan **Interpolasi Linier**.
+Aplikasi ini melakukan interpolasi linier untuk mengisi **data langkah yang hilang**
+berdasarkan waktu. Masukkan beberapa titik waktu & jumlah langkah, dan biarkan
+sistem mengisi nilai yang kosong.
 """)
 
-# -------------------------
-# UPLOAD FILE
-# -------------------------
-uploaded = st.file_uploader("Upload file CSV (wajib ada kolom langkah & kalori)", type=["csv"])
+st.header("📝 Input Data Langkah Kaki")
 
-def detect_columns(df):
-    # Normalisasi kolom
-    colmap = {c.lower().replace(" ", ""): c for c in df.columns}
+# ----------- INPUT MANUAL -----------
+with st.form("input_form"):
+    st.subheader("Masukkan Data (Jam & Langkah)")
 
-    steps = None
-    calories = None
+    jam = st.text_input(
+        "Contoh format jam: 08:00, 09:00, 10:00, 11:00",
+        "08:00, 09:00, 10:00, 11:00"
+    )
+    langkah = st.text_input(
+        "Isi langkah dengan koma. Gunakan 'kosong' atau '-' untuk data hilang.",
+        "1000, -, 2500, 4000"
+    )
 
-    # Nama umum
-    for k, v in colmap.items():
-        if k in ["steps", "stepstotal", "stepcount", "stepscount"]:
-            steps = v
-        if k in ["calories", "kcal", "caloriestotal"]:
-            calories = v
+    submitted = st.form_submit_button("Proses Interpolasi")
 
-    return steps, calories
+if submitted:
+    # --- Convert input jam ---
+    jam_list_raw = [j.strip() for j in jam.split(",")]
+    langkah_raw = [l.strip() for l in langkah.split(",")]
 
-
-def interpolate_series(s):
-    return s.astype(float).interpolate(method="linear", limit_direction="both")
-
-
-if uploaded:
-
-    # -------------------------
-    # LOAD DATA
-    # -------------------------
-    try:
-        df = pd.read_csv(uploaded)
-    except:
-        st.error("File tidak bisa dibaca. Pastikan format CSV benar.")
+    if len(jam_list_raw) != len(langkah_raw):
+        st.error("Jumlah jam dan langkah harus sama!")
         st.stop()
 
-    st.subheader("📄 Preview Data")
-    st.dataframe(df.head(), use_container_width=True)
+    # --- Convert ke numeric ---
+    langkah_num = []
+    for x in langkah_raw:
+        if x in ["-", "", "kosong"]:
+            langkah_num.append(np.nan)
+        else:
+            try:
+                langkah_num.append(float(x))
+            except:
+                langkah_num.append(np.nan)
 
-    # -------------------------
-    # DETEKSI KOLOM
-    # -------------------------
-    step_col, cal_col = detect_columns(df)
+    # --- Buat DataFrame ---
+    df = pd.DataFrame({
+        "Jam": jam_list_raw,
+        "Langkah": langkah_num
+    })
 
-    if step_col is None or cal_col is None:
-        st.error("Kolom langkah atau kalori tidak ditemukan. Pastikan CSV ada kolom 'steps' dan 'calories'.")
-        st.stop()
+    # --- Interpolasi ---
+    df["Interpolasi"] = df["Langkah"].interpolate(method="linear")
 
-    st.success(f"Kolom terdeteksi → Steps: **{step_col}**, Calories: **{cal_col}**")
+    st.subheader("📄 Tabel Hasil Interpolasi")
+    st.dataframe(df, use_container_width=True)
 
-    # -------------------------
-    # INTERPOLASI
-    # -------------------------
-    df["_steps_interp"] = interpolate_series(df[step_col])
-    df["_cal_interp"] = interpolate_series(df[cal_col])
+    # --- Grafik ---
+    st.subheader("📈 Grafik Langkah (Ori + Interpolasi)")
 
-    # Summary missing
-    st.subheader("📊 Ringkasan Missing Value")
-    col1, col2 = st.columns(2)
-    col1.metric("Missing Steps", int(df[step_col].isna().sum()))
-    col2.metric("Missing Calories", int(df[cal_col].isna().sum()))
-
-    # -------------------------
-    # GRAFIK 1 — Steps ori vs interpolasi
-    # -------------------------
-    st.subheader("📈 Grafik Steps (Original vs Interpolated)")
-
-    chart_df = df[["_steps_interp", step_col]].reset_index().melt(id_vars="index",
-                                                                  var_name="Jenis",
-                                                                  value_name="Nilai")
+    chart_df = df.reset_index().melt(
+        id_vars=["index", "Jam"],
+        value_vars=["Langkah", "Interpolasi"],
+        var_name="Jenis",
+        value_name="Nilai"
+    )
 
     chart = (
         alt.Chart(chart_df)
-        .mark_line()
+        .mark_line(point=True)
         .encode(
-            x="index:Q",
-            y="Nilai:Q",
+            x=alt.X("Jam:N", title="Waktu"),
+            y=alt.Y("Nilai:Q", title="Jumlah Langkah"),
             color="Jenis:N",
-            tooltip=["index", "Jenis", "Nilai"]
+            tooltip=["Jam", "Jenis", "Nilai"]
         )
         .interactive()
     )
+
     st.altair_chart(chart, use_container_width=True)
 
-    # -------------------------
-    # GRAFIK 2 — Steps vs Calories (interpolated)
-    # -------------------------
-    st.subheader("🔥 Hubungan Steps & Calories (Interpolated)")
+    # --- Fun Animation Message ---
+    st.success("🎉 Interpolasi selesai! Nilai kosong berhasil diisi secara akurat.")
+else:
+    st.info("Masukkan data terlebih dahulu lalu klik *Proses Interpolasi*.")
 
-    scatter = (
-        alt.Chart(df)
-        .mark_circle(size=60)
-        .encode(
-            x="_steps_interp:Q",
-            y="_cal_interp:Q",
-            tooltip=[step_col, cal_col, "_steps_interp", "_cal_interp"]
-        )
-        .interactive()
-    )
-    st.altair_chart(scatter, use_container_width=True)
-
-    # -------------------------
-    # DOWNLOAD HASIL
-    # -------------------------
-    st.subheader("📥 Download Hasil Interpolasi")
-    out = df.copy()
-    st.download_button(
-        label="Download CSV",
-        data=out.to_csv(index=False).encode("utf-8"),
-        file_name="hasil_interpolasi.csv",
-        mime="text/csv"
-    )
