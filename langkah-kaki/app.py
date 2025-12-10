@@ -1,168 +1,142 @@
 import streamlit as st
-import pandas as pd
 import numpy as np
-import altair as alt
+import pandas as pd
+import plotly.express as px
 
-# ============================
-# PAGE CONFIG
-# ============================
+# ------------------ PAGE CONFIG ------------------
 st.set_page_config(
-    page_title="Fitness Dashboard – Interpolasi Kalori",
-    page_icon="🔥",
+    page_title="Step & Calorie Dashboard",
+    page_icon="👟",
     layout="wide"
 )
 
-# ============================
-# CUSTOM STYLE (AESTHETIC)
-# ============================
+# ------------------ CSS AESTHETIC ------------------
 st.markdown("""
 <style>
-body {
-    background: linear-gradient(135deg, #3A0CA3, #7209B7);
-    color: white;
-}
-.sidebar .sidebar-content {
-    background: #240046;
-}
-.big-title {
-    font-size: 48px;
-    font-weight: 900;
-    text-align: center;
-    color: #4CC9F0;
-}
-.metric-card {
-    background: #4CC9F022;
-    padding: 20px;
-    border-radius: 16px;
-    text-align: center;
-    margin-bottom: 20px;
-}
+    .bg {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: radial-gradient(circle at top left, #6a5af950, transparent),
+                    radial-gradient(circle at bottom right, #ff77e960, transparent);
+        z-index: -1;
+    }
+    .title {
+        font-size: 42px; 
+        font-weight: 800;
+        text-align: center;
+        background: linear-gradient(90deg,#6a5af9,#ff77e9);
+        -webkit-background-clip: text;
+        color: transparent;
+        margin-top: 20px;
+        margin-bottom: -10px;
+    }
+    .sub {
+        text-align:center;
+        color:#bbb;
+        margin-bottom: 30px;
+    }
+    .card {
+        padding: 20px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,0.15);
+        backdrop-filter: blur(12px);
+        transition: 0.25s;
+    }
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0px 8px 20px rgba(0,0,0,0.25);
+    }
 </style>
+<div class='bg'></div>
 """, unsafe_allow_html=True)
 
-# ============================
-# SIDEBAR NAVIGATION
-# ============================
-menu = st.sidebar.radio("Navigasi", ["🏠 Home", "📝 Input Data", "📊 Grafik", "🔍 Insight"])
+# ------------------ SIDEBAR MENU ------------------
+menu = st.sidebar.radio(
+    "Menu",
+    ["🏠 Home", "📝 Input Langkah", "📈 Interpolasi"]
+)
 
-# -----------------------------
-# PAGE 1 — HOME
-# -----------------------------
+# ------------------ HOME PAGE ------------------
 if menu == "🏠 Home":
-    st.markdown("<h1 class='big-title'>🔥 Fitness Dashboard – Interpolasi Kalori</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='title'>Step & Calorie Dashboard</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='sub'>Aplikasi interpolasi data hilang • tracking langkah • estimasi kalori</p>", unsafe_allow_html=True)
 
-    st.write("### Selamat datang di dashboard fitness modern berbasis interpolasi!")
-    st.write("""
-    Aplikasi ini digunakan untuk:
-    - Mendeteksi data langkah/kalori yang hilang
-    - Mengisi nilai kosong secara otomatis dengan interpolasi linier
-    - Menampilkan dashboard keren untuk presentasi
-    """)
+    st.image(
+        "https://i.pinimg.com/originals/70/21/ae/7021ae9d635a6e28f29d135fea4b8c61.gif",
+        use_column_width=True
+    )
 
-    st.image("https://i.gifer.com/7QEa.gif", width=350)  # GIF aesthetic
+    c1, c2, c3 = st.columns(3)
+    with c1: 
+        st.markdown("<div class='card'><b>Input Langkah Manual</b><br>Tambah data sesuai jam</div>", unsafe_allow_html=True)
+    with c2: 
+        st.markdown("<div class='card'><b>Hitung Kalori</b><br>Estimasi otomatis</div>", unsafe_allow_html=True)
+    with c3: 
+        st.markdown("<div class='card'><b>Interpolasi</b><br>Mengisi data langkah yang hilang</div>", unsafe_allow_html=True)
 
-# -----------------------------
-# PAGE 2 — INPUT DATA
-# -----------------------------
-elif menu == "📝 Input Data":
+# ------------------ INPUT PAGE ------------------
+if menu == "📝 Input Langkah":
 
-    st.header("📝 Input Data Langkah & Kalori")
+    st.markdown("### 📝 Input Data Langkah & Kalori")
 
-    with st.form("input_form"):
-        jam = st.text_input("Jam (pisahkan dengan koma)", "08:00, 09:00, 10:00, 11:00")
-        langkah = st.text_input("Langkah (gunakan '-' untuk data hilang)", "1200, -, 3000, -")
-        kalori = st.text_input("Kalori (gunakan '-' untuk data hilang)", "50, -, 120, -")
-
-        submitted = st.form_submit_button("Proses Data")
-
-    if submitted:
-        jam_list = [j.strip() for j in jam.split(",")]
-        langkah_raw = [l.strip() for l in langkah.split(",")]
-        kalori_raw = [k.strip() for k in kalori.split(",")]
-
-        def convert(x):
-            if x in ["-", "", "none", "null"]:
-                return np.nan
-            try:
-                return float(x)
-            except:
-                return np.nan
-
-        langkah_num = [convert(x) for x in langkah_raw]
-        kalori_num = [convert(x) for x in kalori_raw]
-
-        df = pd.DataFrame({
-            "Jam": jam_list,
-            "Langkah": langkah_num,
-            "Kalori": kalori_num
-        })
-
-        df["Langkah Interpolasi"] = df["Langkah"].interpolate()
-        df["Kalori Interpolasi"] = df["Kalori"].interpolate()
-
-        st.session_state["data"] = df
-
-        st.success("Data berhasil diproses! Lanjut ke menu **Grafik**.")
-
-# -----------------------------
-# PAGE 3 — GRAFIK
-# -----------------------------
-elif menu == "📊 Grafik":
-
+    # Inisialisasi session_state
     if "data" not in st.session_state:
-        st.error("Masukkan data dulu di menu Input Data.")
-    else:
-        df = st.session_state["data"]
+        st.session_state.data = pd.DataFrame(columns=["Jam", "Langkah", "Kalori"])
 
-        st.header("📊 Grafik Interpolasi Langkah & Kalori")
+    jam = st.time_input("Jam")
+    langkah = st.number_input("Jumlah Langkah", min_value=0)
+    kalori = langkah * 0.04   # estimasi sederhana
 
-        melted = df.melt(
-            id_vars="Jam",
-            value_vars=["Langkah", "Langkah Interpolasi", "Kalori", "Kalori Interpolasi"],
-            var_name="Jenis",
-            value_name="Nilai"
+    if st.button("Tambah Data"):
+        new_row = {"Jam": str(jam), "Langkah": langkah, "Kalori": kalori}
+        st.session_state.data.loc[len(st.session_state.data)] = new_row
+        st.success("Data berhasil ditambahkan!")
+
+    st.write("### 📄 Data Kamu")
+    st.dataframe(st.session_state.data)
+
+    if not st.session_state.data.empty:
+        fig = px.line(
+            st.session_state.data,
+            x="Jam",
+            y="Langkah",
+            markers=True,
+            title="Grafik Langkah"
         )
+        st.plotly_chart(fig, use_container_width=True)
 
-        chart = (
-            alt.Chart(melted)
-            .mark_line(point=True)
-            .encode(
-                x="Jam:N",
-                y="Nilai:Q",
-                color="Jenis:N",
-                tooltip=["Jam", "Jenis", "Nilai"]
-            )
-            .properties(height=400)
-            .interactive()
-        )
+# ------------------ INTERPOLASI PAGE ------------------
+if menu == "📈 Interpolasi":
 
-        st.altair_chart(chart, use_container_width=True)
+    st.markdown("## 📈 Interpolasi Data Langkah Hilang")
 
-# -----------------------------
-# PAGE 4 — INSIGHT
-# -----------------------------
-elif menu == "🔍 Insight":
-
-    if "data" not in st.session_state:
-        st.error("Masukkan data dulu di menu Input Data.")
+    if st.session_state.data.empty:
+        st.warning("Data masih kosong. Masukkan data dulu di menu Input.")
     else:
-        df = st.session_state["data"]
+        df = st.session_state.data.copy()
+        df["Jam"] = pd.to_datetime(df["Jam"])
+        df = df.sort_values("Jam")
 
-        st.header("🔍 Analisis & Insight")
+        # ubah jam menjadi menit supaya bisa diinterpolasi
+        df["Menit"] = df["Jam"].dt.hour * 60 + df["Jam"].dt.minute
 
-        col1, col2, col3 = st.columns(3)
+        df_inter = df[["Menit", "Langkah"]].set_index("Menit")
+        df_inter = df_inter.interpolate(method="linear")
 
-        col1.markdown("<div class='metric-card'><h3>Total Langkah</h3><h2>" +
-                      str(int(df['Langkah Interpolasi'].sum())) + "</h2></div>", unsafe_allow_html=True)
+        # hasil interpolasi utk kalori
+        df_inter["Kalori"] = df_inter["Langkah"] * 0.04
 
-        col2.markdown("<div class='metric-card'><h3>Total Kalori</h3><h2>" +
-                      str(int(df['Kalori Interpolasi'].sum())) + "</h2></div>", unsafe_allow_html=True)
+        st.write("### 🔍 Hasil Interpolasi")
+        st.dataframe(df_inter)
 
-        missing = df["Kalori"].isna().sum()
-        col3.markdown(f"<div class='metric-card'><h3>Data Hilang</h3><h2>{missing}</h2></div>", unsafe_allow_html=True)
+        fig2 = px.line(
+            df_inter,
+            y="Langkah",
+            title="Grafik Interpolasi Langkah",
+            markers=True
+        )
+        st.plotly_chart(fig2, use_container_width=True)
 
-        st.write("### Insight Otomatis")
-        st.write("- Jam paling aktif: **{}**".format(df.loc[df["Langkah Interpolasi"].idxmax(), "Jam"]))
-        st.write("- Pola kalori meningkat seiring jumlah langkah.")
-        st.write("- Interpolasi mengisi data hilang dengan mulus.")
 
