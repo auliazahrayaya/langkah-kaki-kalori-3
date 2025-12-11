@@ -2,123 +2,149 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 
+# ================= PAGE CONFIG ===============
 st.set_page_config(
-    page_title="Step & Calorie Tracker",
+    page_title="Step & Calorie Interpolation",
     page_icon="👟",
     layout="wide"
 )
 
-# ============ DARK MODE CUSTOM CSS ============
+# ================= DARK MODE CSS ===============
 dark_css = """
 <style>
 [data-testid="stAppViewContainer"] {
-    background-color: #0F1117;
-    color: #FFFFFF;
+    background-color: #0D1117;
+    color: white;
 }
 
 .card {
-    background: rgba(255,255,255,0.07);
-    padding: 25px;
+    background: rgba(255,255,255,0.08);
+    padding: 20px;
     border-radius: 15px;
-    backdrop-filter: blur(6px);
     border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(5px);
     transition: 0.3s;
 }
 
 .card:hover {
+    border-color: #4ED2F7;
     transform: scale(1.01);
-    border-color: rgba(0,255,255,0.4);
 }
 
 .center { text-align: center; }
+
+.title {
+    font-size: 42px;
+    font-weight: 700;
+    color: #4ED2F7;
+    text-align: center;
+}
 </style>
 """
 st.markdown(dark_css, unsafe_allow_html=True)
 
-# ============ MENU =============
-menu = st.sidebar.radio(
-    "Menu",
-    ["🏠 Home", "📊 Hitung Langkah & Kalori", "👤 Profil Pembuat"]
-)
+# ================= SIDEBAR MENU ===============
+menu = st.sidebar.radio("Menu", ["🏠 Home", "📊 Hitung Langkah & Kalori", "👤 Profil"])
 
-# ================================================================
-# 🏠 HOME
-# ================================================================
+# ================= HOME PAGE ==================
 if menu == "🏠 Home":
-    st.markdown("<h1 class='center'>👟 Step & Calorie Tracker</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='center'>Menghitung langkah per jam, mengisi data hilang dengan interpolasi, dan menghitung kalori harian secara rasional.</p>", unsafe_allow_html=True)
+    st.markdown("<h1 class='title'>👟 Step & Calorie Interpolation</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='center'>Interpolasi data langkah yang hilang + perhitungan kalori rasional dalam 1 hari.</p>", unsafe_allow_html=True)
 
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("Fitur:")
+    st.subheader("✨ Fitur Utama")
     st.write("""
-    - Input langkah per jam  
-    - Data kosong akan dihitung otomatis menggunakan **Interpolasi Linier**  
-    - Perhitungan kalori menggunakan standar konversi aktivitas manusia  
-    - Tampilan elegan dark mode  
+    - Input jam & langkah manual  
+    - Data langkah yang hilang diisi otomatis dengan **Interpolasi Linier**
+    - Estimasi kalori menggunakan standar fisiologi manusia
+    - Tampilan dark mode aesthetic
     """)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ================================================================
-# 📊 HITUNG
-# ================================================================
+# ===================== HITUNG PAGE =======================
 elif menu == "📊 Hitung Langkah & Kalori":
-    st.markdown("<h1 class='center'>📊 Hitung Langkah & Kalori</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='center'>Isi langkah per jam. Kosongkan jika lupa — interpolasi akan menyelesaikannya.</p>", unsafe_allow_html=True)
-
-    hours = [f"{h:02d}:00" for h in range(24)]
+    st.markdown("<h1 class='title'>📊 Hitung Langkah & Kalori</h1>", unsafe_allow_html=True)
 
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("Input Data Langkah per Jam")
+    st.subheader("1. Pilih jam/waktu")
 
-    langkah_input = {}
-    for h in hours:
-        langkah_input[h] = st.text_input(f"Langkah pada {h}", "")
-
+    jam = st.multiselect(
+        "Pilih jam aktivitas:",
+        options=[f"{h}:00" for h in range(6, 23)],
+        default=["06:00", "09:00", "12:00", "15:00", "18:00"]
+    )
     st.markdown("</div>", unsafe_allow_html=True)
 
-    if st.button("Hitung Interpolasi + Kalori"):
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("2. Masukkan jumlah langkah (pisahkan koma)")
+
+    langkah_text = st.text_input("Contoh: 500, 1200, 1800, 1500, 2000", "")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    if st.button("🔍 Hitung Interpolasi + Kalori"):
+        # Validasi
+        try:
+            langkah_list = [float(x.strip()) for x in langkah_text.split(",")]
+        except:
+            st.error("Format langkah harus angka dipisah koma!")
+            st.stop()
+
+        if len(jam) != len(langkah_list):
+            st.error("Jumlah JAM dan LANGKAH harus sama!")
+            st.stop()
+
         df = pd.DataFrame({
-            "Jam": hours,
-            "Langkah": [
-                float(x) if x.strip() != "" else np.nan
-                for x in langkah_input.values()
-            ]
+            "Jam": jam,
+            "Langkah": langkah_list
         })
 
-        df["Langkah"] = df["Langkah"].interpolate(method="linear")
+        df["X"] = df["Jam"].str.slice(0, 2).astype(int)
 
-        df["Kalori"] = df["Langkah"] * 0.04
+        # Buat jam lengkap 6–22
+        jam_lengkap = np.arange(6, 23)
 
-        total = df["Kalori"].sum()
+        # Interpolasi langkah
+        langkah_interp = np.interp(jam_lengkap, df["X"], df["Langkah"])
 
-        st.success("Interpolasi berhasil dilakukan.")
+        # Estimasi kalori = 0.04 kcal per langkah (standar fisiologis)
+        kalori = langkah_interp * 0.04
 
-        st.dataframe(df)
+        hasil = pd.DataFrame({
+            "Jam": jam_lengkap,
+            "Langkah (Interpolasi)": langkah_interp,
+            "Kalori (kcal)": kalori
+        })
 
-        st.markdown(f"### 🔥 Total Kalori Terbakar Hari Ini: **{total:.2f} kcal**")
+        total_kal = hasil["Kalori (kcal)"].sum()
 
-# ================================================================
-# 👤 PROFIL
-# ================================================================
-elif menu == "👤 Profil Pembuat":
-    st.markdown("<h1 class='center'>👤 Profil Pembuat</h1>", unsafe_allow_html=True)
+        st.success("Interpolasi selesai! Data lengkap dari jam 06:00 - 22:00")
+
+        st.dataframe(hasil)
+
+        st.markdown(f"### 🔥 Total Kalori Terbakar: **{total_kal:.2f} kcal**")
+
+        st.line_chart(hasil.set_index("Jam")["Kalori (kcal)"])
+
+# ===================== PROFILE PAGE =======================
+elif menu == "👤 Profil":
+    st.markdown("<h1 class='title'>👤 Profil Pembuat</h1>", unsafe_allow_html=True)
 
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("Mahasiswa 1")
+    st.subheader("👩 Mahasiswa 1")
     st.write("""
     **Nama:** Aulia Zahra  
     **NIM:** K1323015  
-    **Prodi:** Pendidikan Matematika 
-    **Universitas:** Universitas Sebelas Maret (UNS)
+    **Prodi:** Pendidikan Matematika
+    **Universitas:** Universitas Sebelas Maret
     """)
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("Mahasiswa 2")
+    st.subheader("👩 Mahasiswa 2")
     st.write("""
     **Nama:** Arum Fajar Rahmawati 
     **NIM:** K1323011 
-    **Prodi:** Pendidikan Matematika 
-    **Universitas:** Universitas Sebelas Maret (UNS) 
+    **Prodi:** Pendidikan Matematika
+    **Universitas:** Universitas Sebelas Maret
     """)
     st.markdown("</div>", unsafe_allow_html=True)
