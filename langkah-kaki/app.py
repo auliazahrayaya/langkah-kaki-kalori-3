@@ -8,7 +8,7 @@ import numpy as np
 st.set_page_config(page_title="DailyStep", page_icon="👟", layout="wide")
 
 # =====================================================================
-# CSS — BIRU LANGIT / BIRU MUDA
+# CSS — BIRU LANGIT / BIRU MUDA & ESTETIK
 # =====================================================================
 st.markdown("""
 <style>
@@ -34,7 +34,7 @@ body {
 
 /* Hero Box */
 .hero {
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.55);
     padding: 40px;
     border-radius: 26px;
     backdrop-filter: blur(10px);
@@ -42,15 +42,6 @@ body {
     margin: auto;
     text-align: center;
     box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-}
-
-/* Table */
-.dataframe th {
-    background-color: #a9d3ff;
-    color: #0a4fa3;
-}
-.dataframe td {
-    background-color: #e0f0ff;
 }
 
 /* Profile Card */
@@ -91,20 +82,20 @@ menu = st.sidebar.radio(
 )
 
 # =====================================================================
-# 1 — HOME PAGE (SIMPLE & ESTETIK, BAHASA INDONESIA)
+# 1 — HOME PAGE
 # =====================================================================
 if menu == "Home":
     st.markdown('<p class="title">DailyStep</p>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">Catat langkahmu setiap jam dengan tampilan menarik 💙</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Catat langkahmu setiap jam dengan tampilan yang menyenangkan 💙</p>', unsafe_allow_html=True)
     st.markdown("""
     <div class="hero">
         <img src="https://cdn-icons-png.flaticon.com/512/5968/5968875.png" width="100">
-        <h3 style="color:#0a4fa3; font-size:26px; margin-top:10px;">Selamat Datang!</h3>
+        <h3 style="color:#0a4fa3; font-size:26px; margin-top:10px;">Halo!</h3>
         <p style="color:#3c5f8a; font-size:17px;">
-            Lihat langkahmu per jam, dan jam yang kosong akan terisi otomatis.
+            Masukkan langkahmu per jam, jam kosong akan terisi otomatis 😄
         </p>
         <p style="color:#0a4fa3; font-size:16px; margin-top:10px;">
-            Gunakan menu di sebelah kiri 💙
+            Yuk, mulai dari menu di sebelah kiri 💙
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -114,7 +105,7 @@ if menu == "Home":
 # =====================================================================
 elif menu == "Input Your Step":
     st.markdown('<p class="title">Input Your Step</p>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">Isi langkah per jam, jam kosong nanti diisi interpolasi 💙</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Pilih jam, masukkan langkah, dan simpan 💙</p>', unsafe_allow_html=True)
 
     # Jam 06:00–24:00
     jam_list = [f"{h:02d}:00" for h in range(6, 25)]
@@ -123,29 +114,30 @@ elif menu == "Input Your Step":
     if "steps" not in st.session_state:
         st.session_state["steps"] = {jam: None for jam in jam_list}
 
-    # Tampilkan scrollable table untuk input langkah
-    st.write("### Tabel Langkahmu (editable)")
-    df = pd.DataFrame({
+    selected_jam = st.selectbox("Pilih jam:", jam_list)
+    langkah = st.number_input("Masukkan langkah:", 0, 30000, step=10)
+
+    if st.button("Simpan Langkah"):
+        st.session_state["steps"][selected_jam] = langkah
+        st.success(f"Langkah pada jam {selected_jam} tersimpan!")
+
+    # Tampilkan semua langkah
+    df_display = pd.DataFrame({
         "Jam": jam_list,
         "Langkah": [st.session_state["steps"][j] for j in jam_list]
     })
-    edited_df = st.data_editor(df, num_rows="dynamic")  # Streamlit >=1.24
-
-    # Update session state
-    for idx, jam in enumerate(jam_list):
-        st.session_state["steps"][jam] = edited_df.loc[idx, "Langkah"]
-
-    st.success("Langkah tersimpan! Jam kosong akan diisi interpolasi di menu selanjutnya.")
+    st.write("### Langkah per jam")
+    st.dataframe(df_display, height=400)
 
 # =====================================================================
 # 3 — COUNT YOUR CALORIES
 # =====================================================================
 elif menu == "Count Your Calories":
     st.markdown('<p class="title">Count Your Calories</p>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">Fokus utama interpolasi langkah yang hilang 💙</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Lihat interpolasi langkah yang hilang 💙</p>', unsafe_allow_html=True)
 
     if "steps" not in st.session_state:
-        st.warning("Silakan isi langkahmu dulu di menu 'Input Your Step'.")
+        st.warning("Isi langkahmu dulu di menu 'Input Your Step'.")
     else:
         df = pd.DataFrame({
             "Jam": [f"{h:02d}:00" for h in range(6, 25)],
