@@ -36,13 +36,13 @@ menu = st.sidebar.radio(
 # =========================
 if menu == "Home":
     st.markdown('<p class="title">DailyStep</p>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">Catat langkahmu per jam dengan cara yang menyenangkan 💙</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Ayo Track Langkah mu! 💙</p>', unsafe_allow_html=True)
     st.markdown("""
     <div class="hero">
         <img src="https://cdn-icons-png.flaticon.com/512/5968/5968875.png" width="100">
         <h3 style="color:#0a4fa3; font-size:26px; margin-top:10px;">Halo!</h3>
-        <p style="color:#3c5f8a; font-size:17px;">Pilih jam dan masukkan langkahmu. Jam kosong akan diisi otomatis 😄</p>
-        <p style="color:#0a4fa3; font-size:16px; margin-top:10px;">Mulai dari menu di sebelah kiri 💙</p>
+        <p style="color:#3c5f8a; font-size:17px;">Pilih jam dan masukkan langkahmu 😄</p>
+        <p style="color:#0a4fa3; font-size:16px; margin-top:10px;"> Klik menu di bagian kiri 💙</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -78,7 +78,6 @@ elif menu == "Input Your Step":
 # =========================
 elif menu == "Count Your Calories":
     st.markdown('<p class="title">Count Your Calories</p>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">Fokus utama: interpolasi langkah hilang 💙</p>', unsafe_allow_html=True)
 
     if "steps" not in st.session_state:
         st.warning("Isi langkahmu dulu di menu 'Input Your Step'.")
@@ -140,3 +139,4 @@ elif menu == "Profile Creator":
             <p>NIM: K1323011<br>Prodi: Pendidikan Matematika<br>UNS</p>
         </div>
         """, unsafe_allow_html=True)
+
