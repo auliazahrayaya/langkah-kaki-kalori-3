@@ -64,8 +64,8 @@ if menu == "Home":
     """, unsafe_allow_html=True)
 
 
-# ----------- INPUT LANGKAH PER JAM ----------
-elif menu == "Input Your Step":
+# ----------- INPUT YOUR STEP ----------
+elif menu == "Input Langkah":
     st.markdown('<p class="title" style="font-size:40px;">Input Langkah</p>', unsafe_allow_html=True)
 
     st.markdown('<div class="glass">', unsafe_allow_html=True)
@@ -126,7 +126,7 @@ elif menu == "Input Your Step":
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-# ----------- PROFIL ----------
+# ----------- PROFILE CREATOR ----------
 elif menu == "Profile Creator":
     st.markdown("<h1 class='title'>Creator</h1>", unsafe_allow_html=True)
 
@@ -188,3 +188,4 @@ elif menu == "Profile Creator":
 
     </div>
     """, unsafe_allow_html=True)
+
