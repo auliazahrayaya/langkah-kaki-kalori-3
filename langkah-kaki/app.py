@@ -36,13 +36,13 @@ menu = st.sidebar.radio(
 # =========================
 if menu == "Home":
     st.markdown('<p class="title">DailyStep</p>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">Ayo Track Langkah mu! 💙</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Catat langkahmu per jam dengan cara yang menyenangkan 💙</p>', unsafe_allow_html=True)
     st.markdown("""
     <div class="hero">
-        <img src="https://cdn-icons-png.flaticon.com/512/869/869869.png" width="100">
+        <img src="https://cdn-icons-png.flaticon.com/512/889/889692.png" width="100">
         <h3 style="color:#0a4fa3; font-size:26px; margin-top:10px;">Halo!</h3>
-        <p style="color:#3c5f8a; font-size:17px;">Pilih jam dan masukkan langkahmu 😄</p>
-        <p style="color:#0a4fa3; font-size:16px; margin-top:10px;"> Klik menu di bagian kiri 💙</p>
+        <p style="color:#3c5f8a; font-size:17px;">Pilih jam dan masukkan langkahmu. Jam kosong akan diisi otomatis 😄</p>
+        <p style="color:#0a4fa3; font-size:16px; margin-top:10px;">Mulai dari menu di sebelah kiri 💙</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -65,7 +65,6 @@ elif menu == "Input Your Step":
         st.session_state["steps"][selected_jam] = langkah
         st.success(f"Langkah pada jam {selected_jam} tersimpan!")
 
-    # Tampilkan semua langkah
     df_display = pd.DataFrame({
         "Jam": jam_list,
         "Langkah": [st.session_state["steps"][j] for j in jam_list]
@@ -78,6 +77,7 @@ elif menu == "Input Your Step":
 # =========================
 elif menu == "Count Your Calories":
     st.markdown('<p class="title">Count Your Calories</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Langkah hilang otomatis diisi 💙</p>', unsafe_allow_html=True)
 
     if "steps" not in st.session_state:
         st.warning("Isi langkahmu dulu di menu 'Input Your Step'.")
@@ -86,18 +86,14 @@ elif menu == "Count Your Calories":
             "Jam": [f"{h:02d}:00" for h in range(6, 25)],
             "Langkah": list(st.session_state["steps"].values())
         })
-        # Ubah None jadi NaN untuk interpolasi
         df["Langkah"] = df["Langkah"].replace({None: np.nan}).astype("float")
         df["Interpolated"] = df["Langkah"].interpolate(method="linear")
 
-        st.subheader("Langkah per jam setelah interpolasi")
-        st.dataframe(df, height=400)
-
-        # Jam kosong yang terisi interpolasi
+        # Hanya tampilkan jam yang awalnya kosong
         missing_filled = df[df["Langkah"].isna()]
         if not missing_filled.empty:
-            st.subheader("Jam yang kosong dan terisi interpolasi")
-            st.dataframe(missing_filled)
+            st.subheader("Langkah hilang yang diisi otomatis")
+            st.dataframe(missing_filled[["Jam","Interpolated"]].rename(columns={"Interpolated":"Langkah"}))
 
         # Total langkah = jam terakhir yang terisi
         last_steps = df["Interpolated"].dropna().iloc[-1]
@@ -106,7 +102,6 @@ elif menu == "Count Your Calories":
         st.markdown("<div class='hero'>", unsafe_allow_html=True)
         st.write(f"**Langkah terakhir (hari ini):** {int(last_steps):,}")
         st.write(f"**Kalori perkiraan:** {calories} kkal")
-        # Pesan kesehatan
         if calories < 80:
             st.info("🌥 Jalan sedikit atau istirahat sebentar 💙")
         elif calories < 200:
@@ -139,5 +134,3 @@ elif menu == "Profile Creator":
             <p>NIM: K1323011<br>Prodi: Pendidikan Matematika<br>UNS</p>
         </div>
         """, unsafe_allow_html=True)
-
-
