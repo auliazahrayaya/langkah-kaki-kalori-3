@@ -1,114 +1,169 @@
-# app.py (robust, tolerant, aesthetic-lite)
 import streamlit as st
 import numpy as np
 import pandas as pd
 
-st.set_page_config(page_title="Step → Calorie Interpolator", layout="wide")
-
-# Header
-st.markdown(
-    "<h1 style='text-align:center;color:#2d2d80;'>👟 Step & Calorie Interpolator</h1>",
-    unsafe_allow_html=True
+# ---------------------
+# PAGE CONFIG
+# ---------------------
+st.set_page_config(
+    page_title="Ayo Menghitung Kalori mu dari Langkah Kaki!",
+    layout="wide",
+    page_icon="✨"
 )
-st.markdown("<p style='text-align:center;color:#666;'>Isi jam & langkah — aplikasi akan mengisi nilai yang hilang menggunakan interpolasi linear.</p>", unsafe_allow_html=True)
-st.write("")
 
-# --- Safe multiselect creation helper ---
-def safe_multiselect(label, options, default=None, key=None):
-    # ensure options are strings
-    opts = [str(o) for o in options]
-    # make default only those that exist in opts
-    if default is None:
-        safe_def = []
-    else:
-        safe_def = [str(d) for d in default if str(d) in opts]
-    return st.multiselect(label, opts, default=safe_def, key=key)
+# ---------------------
+# AESTHETIC CSS
+# ---------------------
+css = """
+<style>
+body {
+    background: linear-gradient(135deg, #ffdbe6, #e4eaff, #c8fff1);
+    background-attachment: fixed;
+    font-family: 'Helvetica Neue', sans-serif;
+}
 
-# --- INPUT: pick hours + enter steps ---
-st.subheader("Input Data (manual, no file)")
+.card {
+    background: rgba(255,255,255,0.55);
+    padding: 25px;
+    border-radius: 20px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0px 8px 20px rgba(0,0,0,0.12);
+    transition: 0.3s ease;
+}
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0px 12px 30px rgba(0,0,0,0.18);
+}
 
-# Build options for hours 06:00..22:00
-hour_options = [f"{h:02d}:00" for h in range(6, 23)]
+.main-title {
+    font-size: 44px;
+    text-align: center;
+    font-weight: 800;
+    background: -webkit-linear-gradient(45deg, #7f00ff, #e100ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
 
-# Use safe multiselect (will not crash if default mismatch)
-chosen_hours = safe_multiselect("Pilih jam:", hour_options, default=["06:00","09:00","12:00","15:00","18:00"], key="hours")
+.metric-box {
+    background: rgba(255,255,255,0.6);
+    padding: 20px;
+    border-radius: 15px;
+    text-align:center;
+}
+</style>
+"""
+st.markdown(css, unsafe_allow_html=True)
 
-# If user didn't select, show info
-if not chosen_hours:
-    st.info("Pilih minimal dua jam agar interpolasi dapat dilakukan.")
-# Input steps as comma-separated aligned with selected hours
-steps_input = st.text_input("Masukkan langkah sesuai urutan jam yang dipilih (pisahkan koma). Gunakan '-' atau kosong untuk missing.", "500, 1200, 2000, -, 1800")
+# ---------------------
+# MENU
+# ---------------------
+menu = st.sidebar.selectbox(
+    "✨ Menu",
+    ["Home", "Profile Creator"]
+)
 
-# calories per step
-cals_per_step = st.number_input("Kalori per langkah (kcal)", value=0.04, min_value=0.0, step=0.01)
+# =============================
+#          HOME PAGE
+# =============================
+if menu == "Home":
+    st.markdown("<h1 class='main-title'>✨ Step Interpolator ✨</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center;'>Menghitung langkah & kalori hilang pakai interpolasi yang aesthetic 💗</p>", unsafe_allow_html=True)
 
-run = st.button("Proses Interpolasi")
+    with st.container():
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("📝 Input Data Harian")
 
-# When run, validate and process
-if run:
-    # validate chosen_hours length vs steps input count
-    hours = chosen_hours
-    steps_raw = [p.strip() for p in steps_input.split(",")]
-    # If user provided fewer/more step values than selected hours, fail gracefully
-    if len(steps_raw) != len(hours):
-        st.error(f"Jumlah nilai langkah ({len(steps_raw)}) harus sama dengan jumlah jam yang dipilih ({len(hours)}).")
-    else:
-        # parse steps to floats or NaN
-        steps_vals = []
-        for s in steps_raw:
-            if s in ("", "-", "nan", "None"):
-                steps_vals.append(np.nan)
+        hours = [f"{h:02d}:00" for h in range(6, 23)]
+        selected_hours = st.multiselect("🕒 Pilih jam:", hours, default=["06:00", "09:00", "12:00", "15:00", "18:00"])
+
+        raw_steps = st.text_input("👟 Masukkan langkah (pisah koma, '-' jika lupa):",
+                                  "500, 1400, -, 2000, 1500")
+
+        cal_per_step = st.number_input("🔥 Kalori per langkah:",
+                                       min_value=0.0, max_value=1.0, value=0.04)
+
+        run = st.button("✨ Jalankan Interpolasi")
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # ----------------------
+    # PROCESSING
+    # ----------------------
+    if run:
+        step_list = [s.strip() for s in raw_steps.split(",")]
+        if len(step_list) != len(selected_hours):
+            st.error("Jumlah langkah tidak sesuai dengan jumlah jam 😞")
+            st.stop()
+
+        parsed_steps = []
+        for s in step_list:
+            if s in ["", "-", "NaN"]:
+                parsed_steps.append(np.nan)
             else:
-                try:
-                    steps_vals.append(float(s))
-                except:
-                    st.error(f"Format langkah tidak valid: '{s}' (harus angka atau '-' untuk kosong)")
-                    st.stop()
+                parsed_steps.append(float(s))
 
-        # Build DataFrame (hour numeric for interp)
-        hour_nums = [int(h.split(":")[0]) for h in hours]
-        df = pd.DataFrame({"HourLabel": hours, "Hour": hour_nums, "Steps": steps_vals})
-        df = df.sort_values("Hour").reset_index(drop=True)
+        hour_num = [int(h.split(":")[0]) for h in selected_hours]
 
-        # need at least 2 known points to interpolate
+        df = pd.DataFrame({
+            "Hour": hour_num,
+            "Label": selected_hours,
+            "Steps": parsed_steps
+        }).sort_values("Hour")
+
         known_mask = ~np.isnan(df["Steps"])
         if known_mask.sum() < 2:
-            st.error("Perlu minimal 2 nilai langkah yang terisi untuk melakukan interpolasi.")
-        else:
-            # full integer hour range between min and max selected hour
-            hmin = int(df["Hour"].min())
-            hmax = int(df["Hour"].max())
-            full_hours = np.arange(hmin, hmax + 1)
+            st.error("Butuh minimal 2 data untuk interpolasi 😭")
+            st.stop()
 
-            known_x = df.loc[known_mask, "Hour"].values
-            known_y = df.loc[known_mask, "Steps"].values
+        full_hours = np.arange(df["Hour"].min(), df["Hour"].max() + 1)
+        interp_steps = np.interp(full_hours, df.loc[known_mask, "Hour"], df.loc[known_mask, "Steps"])
+        interp_cal = interp_steps * cal_per_step
 
-            # np.interp is robust and fast
-            interp_steps = np.interp(full_hours, known_x, known_y)
-            interp_cal = interp_steps * cals_per_step
+        result = pd.DataFrame({
+            "Hour": full_hours,
+            "Label": [f"{h:02d}:00" for h in full_hours],
+            "Steps": interp_steps.round(2),
+            "Calories": interp_cal.round(2)
+        })
 
-            # prepare result dataframe
-            result = pd.DataFrame({
-                "Hour": full_hours,
-                "HourLabel": [f"{h:02d}:00" for h in full_hours],
-                "Steps_interpolated": np.round(interp_steps, 2),
-                "Calories_interpolated": np.round(interp_cal, 2)
-            })
+        # tampilkan hasil
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("🌈 Hasil Interpolasi")
+        st.dataframe(result, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-            # show original + interpolated alignment
-            st.subheader("Hasil (interpolasi pada rentang jam yang dipilih)")
-            st.dataframe(result, use_container_width=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Total Steps", f"{int(result['Steps'].sum()):,}")
+        with col2:
+            st.metric("Total Calories", f"{result['Calories'].sum():.2f} kcal")
 
-            # summaries
-            st.subheader("Ringkasan")
-            total_steps = int(result["Steps_interpolated"].sum())
-            total_cal = float(result["Calories_interpolated"].sum())
-            c1, c2 = st.columns(2)
-            c1.metric("Total Steps (interpolated)", f"{total_steps:,}")
-            c2.metric("Total Calories (interpolated)", f"{total_cal:.2f} kcal")
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("📈 Grafik")
+        st.line_chart(result.set_index("Label")[["Steps", "Calories"]])
+        st.markdown("</div>", unsafe_allow_html=True)
 
-            # simple line charts (native)
-            st.subheader("Grafik")
-            st.line_chart(result.set_index("HourLabel")[["Steps_interpolated", "Calories_interpolated"]])
+# =============================
+#       PROFILE CREATOR
+# =============================
+elif menu == "Profile Creator":
+    st.markdown("<h1 class='main-title'>💖 About The Creator 💖</h1>", unsafe_allow_html=True)
 
-            st.success("Interpolasi selesai ✅")
+    with st.container():
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+
+        st.subheader("✨ Aulia Zahra dan Arum Fajar")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.write("**🎓 Universitas:** (Sebelas Maret)")
+            st.write("**📚 Program Studi:** (Pendidikan Matematika)")
+
+        with col2:
+            st.write("Email: (auliaazahraa1905@gmail.com)")
+            st.write("Instagram: @zahzahra19")
+
+        st.markdown("</div>", unsafe_allow_html=True)
