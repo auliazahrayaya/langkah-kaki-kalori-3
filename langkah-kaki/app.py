@@ -128,28 +128,30 @@ elif menu == "Input Langkah per Jam":
 
 # ----------- PROFIL ----------
 elif menu == "Profil Pembuat":
-    st.markdown('<p class="title" style="font-size:40px;">Profil Pembuat</p>', unsafe_allow_html=True)
+    st.markdown('<p class="title" style="font-size:40px;">Creator</p>', unsafe_allow_html=True)
 
     st.markdown("""
     <div class="glass">
-        <h3 style="color:#0b63c5;">Creator</h3>
 
         <div style="display:flex; gap:25px; justify-content:center; margin-top:20px;">
 
-            <div style="background:white; padding:18px; border-radius:15px; width:40%; text-align:center; box-shadow:0 3px 12px rgba(0,0,0,0.1);">
-                <h4 style="color:#0b63c5;">Aulia Zahra</h4>
+            <div style="background:white; padding:18px; border-radius:15px; width:40%; 
+                        text-align:center; box-shadow:0 3px 12px rgba(0,0,0,0.1);">
+                <h4 style="color:#0b63c5; margin-bottom:8px;">Aulia Zahra</h4>
                 <p style="margin:0; color:#0d4d80;">NIM : K1323015</p>
                 <p style="margin:0; color:#0d4d80;">Prodi : Pendidikan Matematika</p>
                 <p style="margin:0; color:#0d4d80;">Universitas : UNS</p>
             </div>
 
-            <div style="background:white; padding:18px; border-radius:15px; width:40%; text-align:center; box-shadow:0 3px 12px rgba(0,0,0,0.1);">
-                <h4 style="color:#0b63c5;">Arum Fajar R</h4>
+            <div style="background:white; padding:18px; border-radius:15px; width:40%; 
+                        text-align:center; box-shadow:0 3px 12px rgba(0,0,0,0.1);">
+                <h4 style="color:#0b63c5; margin-bottom:8px;">Arum Fajar R</h4>
                 <p style="margin:0; color:#0d4d80;">NIM : K1323011</p>
                 <p style="margin:0; color:#0d4d80;">Prodi : Pendidikan Matematika</p>
                 <p style="margin:0; color:#0d4d80;">Universitas : UNS</p>
             </div>
 
         </div>
+
     </div>
     """, unsafe_allow_html=True)
