@@ -65,7 +65,7 @@ if menu == "Home":
 
 
 # ----------- INPUT LANGKAH PER JAM ----------
-elif menu == "Input Langkah per Jam":
+elif menu == "Input Your Step":
     st.markdown('<p class="title" style="font-size:40px;">Input Langkah</p>', unsafe_allow_html=True)
 
     st.markdown('<div class="glass">', unsafe_allow_html=True)
@@ -127,28 +127,61 @@ elif menu == "Input Langkah per Jam":
 
 
 # ----------- PROFIL ----------
-elif menu == "Profil Pembuat":
-    st.markdown('<p class="title" style="font-size:40px;">Creator</p>', unsafe_allow_html=True)
+elif menu == "Profile Creator":
+    st.markdown("<h1 class='title'>Creator</h1>", unsafe_allow_html=True)
 
     st.markdown("""
-    <div class="glass">
+    <style>
+        .creator-card {
+            background:white;
+            padding:20px;
+            border-radius:18px;
+            width:260px;
+            text-align:center;
+            box-shadow:0 4px 16px rgba(0,0,0,0.12);
+        }
+        .avatar {
+            width:100px;
+            height:100px;
+            border-radius:50%;
+            object-fit:cover;
+            margin-bottom:12px;
+            border:3px solid #0b63c5;
+        }
+        .creator-name {
+            font-size:20px;
+            font-weight:600;
+            color:#0b63c5;
+        }
+        .creator-info {
+            color:#0d4d80;
+            margin:0;
+            font-size:15px;
+        }
+    </style>
 
-        <div style="display:flex; gap:25px; justify-content:center; margin-top:20px;">
+    <div class="glass" style="padding:40px;">
 
-            <div style="background:white; padding:18px; border-radius:15px; width:40%; 
-                        text-align:center; box-shadow:0 3px 12px rgba(0,0,0,0.1);">
-                <h4 style="color:#0b63c5; margin-bottom:8px;">Aulia Zahra</h4>
-                <p style="margin:0; color:#0d4d80;">NIM : K1323015</p>
-                <p style="margin:0; color:#0d4d80;">Prodi : Pendidikan Matematika</p>
-                <p style="margin:0; color:#0d4d80;">Universitas : UNS</p>
+        <div style="display:flex; gap:40px; justify-content:center; margin-top:10px;">
+
+            <!-- Creator 1 -->
+            <div class="creator-card">
+                <img src="https://api.dicebear.com/6.x/thumbs/svg?seed=Zahra"
+                     class="avatar">
+                <p class="creator-name">Aulia Zahra</p>
+                <p class="creator-info">NIM : K1323015</p>
+                <p class="creator-info">Prodi : Pendidikan Matematika</p>
+                <p class="creator-info">Universitas : UNS</p>
             </div>
 
-            <div style="background:white; padding:18px; border-radius:15px; width:40%; 
-                        text-align:center; box-shadow:0 3px 12px rgba(0,0,0,0.1);">
-                <h4 style="color:#0b63c5; margin-bottom:8px;">Arum Fajar R</h4>
-                <p style="margin:0; color:#0d4d80;">NIM : K1323011</p>
-                <p style="margin:0; color:#0d4d80;">Prodi : Pendidikan Matematika</p>
-                <p style="margin:0; color:#0d4d80;">Universitas : UNS</p>
+            <!-- Creator 2 -->
+            <div class="creator-card">
+                <img src="https://api.dicebear.com/6.x/thumbs/svg?seed=Arum"
+                     class="avatar">
+                <p class="creator-name">Arum Fajar R</p>
+                <p class="creator-info">NIM : K1323011</p>
+                <p class="creator-info">Prodi : Pendidikan Matematika</p>
+                <p class="creator-info">Universitas : UNS</p>
             </div>
 
         </div>
