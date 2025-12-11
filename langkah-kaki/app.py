@@ -2,23 +2,23 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 
-# ================================
-# PAGE CONFIG
-# ================================
+# ============================================================
+# CONFIG
+# ============================================================
 st.set_page_config(
     page_title="DailyStep",
-    page_icon="💙",
+    page_icon="👟",
     layout="wide"
 )
 
-# ================================
-# BABY BLUE THEME CSS
-# ================================
+# ============================================================
+# BABY BLUE AESTHETIC CSS
+# ============================================================
 st.markdown("""
 <style>
 
 body {
-    background: linear-gradient(135deg, #dbefff, #b5d8ff);
+    background: linear-gradient(135deg, #dff1ff 0%, #b8dcff 100%);
     font-family: 'Poppins', sans-serif;
 }
 
@@ -28,216 +28,179 @@ body {
 
 /* Title */
 .title {
-    font-size: 42px;
+    font-size: 38px;
     font-weight: 800;
     text-align: center;
-    color: #0a4fa3;
-    margin-bottom: -10px;
+    background: -webkit-linear-gradient(#0a66c2, #4da3ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-top: -5px;
 }
 .subtitle {
     text-align: center;
-    font-size: 18px;
-    color: #3772a8;
-    margin-bottom: 30px;
+    font-size: 17px;
+    color: #2d5f88;
+    margin-top: -12px;
+    margin-bottom: 25px;
 }
 
 /* Glass Card */
 .glass {
     background: rgba(255, 255, 255, 0.55);
-    padding: 25px;
-    border-radius: 20px;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(140,180,255,0.45);
-    box-shadow: 0 4px 14px rgba(0,0,0,0.10);
-    margin-bottom: 20px;
-}
-
-/* Jam Card */
-.jam-card {
-    background: white;
-    padding: 15px;
-    border-radius: 15px;
-    border-left: 5px solid #1675d1;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-/* Buttons */
-.stButton > button {
-    background-color: #1675d1;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 12px;
-    border: none;
-}
-.stButton > button:hover {
-    background-color: #0f5faa;
+    backdrop-filter: blur(10px);
+    border-radius: 18px;
+    padding: 22px;
+    border: 1px solid rgba(80, 150, 255, 0.35);
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.12);
+    margin-bottom: 18px;
 }
 
 /* Profile Card */
-.profile-card {
+.profile {
     background: rgba(255, 255, 255, 0.55);
-    padding: 20px;
-    border-radius: 18px;
-    text-align: center;
-    border: 1px solid rgba(120,160,255,0.45);
-    box-shadow: 0 3px 10px rgba(0,0,0,0.12);
-}
-
-.creator-name {
-    font-size: 20px;
-    font-weight: 700;
-    color: #0a4fa3;
-    margin-top: 10px;
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 22px;
+    text-align:center;
+    border: 1px solid rgba(120, 170, 255, 0.35);
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-
-
-# ================================
-# SIDEBAR MENU
-# ================================
+# ============================================================
+# SIDEBAR
+# ============================================================
 menu = st.sidebar.radio(
-    "Menu",
-    ["Home", "Input Langkah", "Hitung Kalori", "Profil Creator"]
+    "Navigation",
+    ["Home", "Input Jam & Langkah", "Hitung Kalori", "Profil Creator"]
 )
 
-
-
-# ================================
+# ============================================================
 # 1. HOME PAGE
-# ================================
+# ============================================================
 if menu == "Home":
-
-    st.markdown('<p class="title">DailyStep</p>', unsafe_allow_html=True)
-    st.markdown(
-        '<p class="subtitle">Track langkahmu dengan gaya baby blue aesthetic 💙✨</p>',
-        unsafe_allow_html=True
-    )
+    st.markdown("<p class='title'>DailyStep</p>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitle'>Track langkah harianmu dengan vibe biru elegan 💙</p>", unsafe_allow_html=True)
 
     st.markdown("""
-    <div class="glass" style="text-align:center; padding:40px;">
-        <img src="https://cdn-icons-png.flaticon.com/512/9297/9297257.png"
-            width="110" style="margin-bottom:15px; opacity:0.95;">
-        <h3 style="color:#0a4fa3; margin-bottom:5px;">Selamat datang di DailyStep 💙</h3>
-        <p style="color:#3772a8; font-size:16px; margin-top:0px;">
-            Mulai dari menu di kiri untuk input langkah atau hitung kalori.
+    <div class="glass" style="text-align:center;">
+        <h3 style="color:#0a66c2; font-weight:700;">Selamat datang!</h3>
+        <p style="color:#2d5f88; font-size:17px;">
+            Masukkan langkahmu tiap jam, biarin aku isi yang hilang pakai interpolasi.<br>
+            Lalu aku hitungin kalorinya secara rasional & make sense.
+        </p>
+        <p style="margin-top:10px; font-size:16px; color:#0f5faa;">
+            Ayo mulai dari menu di kiri!
         </p>
     </div>
     """, unsafe_allow_html=True)
 
 
+# ============================================================
+# 2. INPUT JAM & LANGKAH
+# ============================================================
+elif menu == "Input Jam & Langkah":
+    st.markdown("<p class='title'>Input Jam & Langkah</p>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitle'>Pilih jam → masukkan langkah → simpan 💙</p>", unsafe_allow_html=True)
 
-# ================================
-# 2. INPUT LANGKAH (SCROLLABLE)
-# ================================
-elif menu == "Input Langkah":
-
-    st.markdown('<p class="title">Input Langkah Per Jam</p>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">Scroll ke bawah & isi langkahmu 💙</p>', unsafe_allow_html=True)
-
-    jam_list = [f"{h:02d}:00" for h in range(6, 23)]
+    jam_list = [f"{h:02d}:00" for h in range(6, 25)]  # 06:00 - 24:00
 
     if "steps" not in st.session_state:
-        st.session_state["steps"] = {jam: 0 for jam in jam_list}
+        st.session_state["steps"] = {jam: None for jam in jam_list}
 
-    steps = st.session_state["steps"]
+    selected_jam = st.selectbox("Pilih Jam", jam_list)
 
-    st.markdown('<div class="glass">', unsafe_allow_html=True)
+    langkah = st.number_input(
+        f"Langkah pada {selected_jam}",
+        min_value=0,
+        max_value=50000,
+        value=st.session_state["steps"][selected_jam] if st.session_state["steps"][selected_jam] else 0,
+        step=10
+    )
 
-    # SCROLL AREA
-    for jam in jam_list:
-        st.markdown(f"<div class='jam-card'>", unsafe_allow_html=True)
-        steps[jam] = st.number_input(
-            f"🕒 {jam}",
-            min_value=0,
-            max_value=30000,
-            value=steps[jam],
-            step=10,
-            key=f"step_{jam}"
-        )
+    if st.button("Simpan Langkah"):
+        st.session_state["steps"][selected_jam] = langkah
+        st.success(f"Data langkah untuk jam {selected_jam} tersimpan ✔")
+
+    # PROGRESS TABLE
+    st.markdown("<br><h4 style='color:#0a66c2;'>Progress Langkah Hari Ini</h4>", unsafe_allow_html=True)
+
+    df = pd.DataFrame({
+        "Jam": jam_list,
+        "Langkah": [st.session_state["steps"][j] for j in jam_list]
+    })
+
+    st.dataframe(df, use_container_width=True)
+
+
+# ============================================================
+# 3. HITUNG KALORI
+# ============================================================
+elif menu == "Hitung Kalori":
+    st.markdown("<p class='title'>Hitung Kalori</p>", unsafe_allow_html=True)
+
+    steps = st.session_state.get("steps", None)
+
+    if steps is None:
+        st.warning("Isi langkah dulu ya 💙")
+    else:
+        df = pd.DataFrame({
+            "Jam": jam_list,
+            "Langkah": [steps[j] for j in jam_list]
+        })
+
+        df["Langkah"] = df["Langkah"].astype(float)
+
+        # Fill missing with interpolation
+        df["Interpolasi"] = df["Langkah"].interpolate()
+
+        total_steps = int(df["Interpolasi"].sum())
+
+        # Formula: 1 langkah = ±0.04 kcal (5.000 langkah ≈ 200 kcal)
+        calories = round(total_steps * 0.04, 2)
+
+        st.markdown("<div class='glass'>", unsafe_allow_html=True)
+        st.subheader("📊 Hasil Perhitungan")
+
+        st.write(f"Total Langkah (setelah interpolasi): **{total_steps:,}**")
+        st.write(f"Estimasi Kalori Terbakar: **{calories} kcal**")
+
+        if calories < 120:
+            st.info("💧 Masih rendah… mungkin kamu butuh jalan santai sebentar.")
+        elif calories < 300:
+            st.success("🌿 Aktivitasmu lumayan baik, lanjutkan ritmenya!")
+        else:
+            st.success("🔥 Kamu aktif banget hari ini! Jangan lupa hidrasi & istirahat.")
+
         st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    st.success("Data tersimpan otomatis ✔")
-
-
-# ================================
-# 3. HITUNG KALORI
-# ================================
-elif menu == "Hitung Kalori":
-
-    st.markdown('<p class="title">Hitung Kalori</p>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">Ayo cek total aktivitasmu hari ini 💙</p>', unsafe_allow_html=True)
-
-    if "steps" not in st.session_state:
-        st.warning("Isi langkah dulu di menu *Input Langkah* 💙")
-    else:
-        data = list(st.session_state["steps"].values())
-        idx = np.arange(len(data))
-
-        data = np.array(data, dtype=float)
-        kosong = np.where(data == 0)[0]
-
-        # INTERPOLASI
-        if len(kosong) > 0:
-            isi = np.where(data != 0)[0]
-            data_interp = data.copy()
-            data_interp[kosong] = np.interp(kosong, isi, data[isi])
-        else:
-            data_interp = data
-
-        total_steps = int(np.sum(data_interp))
-        kalori = round(total_steps * 0.04, 2)
-
-        st.markdown('<div class="glass">', unsafe_allow_html=True)
-        st.subheader("📊 Hasil Perhitungan")
-        st.write(f"Total langkah (setelah interpolasi): **{total_steps:,}**")
-        st.write(f"Estimasi kalori terbakar: **{kalori} kcal**")
-
-        st.subheader("💙 Saran Kesehatan")
-        if kalori < 150:
-            st.info("Coba jalan santai 10–15 menit yaa 💧")
-        elif kalori < 350:
-            st.success("Aktivitasmu cukup oke hari ini! 💙")
-        else:
-            st.success("Kamu aktif banget! Jangan lupa hidrasi & istirahat 💦")
-
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("<h4 style='color:#0a66c2;'>Tabel Data</h4>", unsafe_allow_html=True)
+        st.dataframe(df, use_container_width=True)
 
 
-
-# ================================
+# ============================================================
 # 4. PROFIL CREATOR
-# ================================
+# ============================================================
 elif menu == "Profil Creator":
-
-    st.markdown('<p class="title">Creator</p>', unsafe_allow_html=True)
+    st.markdown("<p class='title'>Profil Creator</p>", unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
 
     with col1:
         st.markdown("""
-        <div class="profile-card">
-            <img src="https://api.dicebear.com/9.x/thumbs/svg?seed=zahra" width="90">
-            <div class="creator-name">Aulia Zahra</div>
-            <p>NIM : K1323015
-            <br>Prodi : Pendidikan Matematika
-            <br>Universitas : UNS</p>
+        <div class='profile'>
+            <img src='https://api.dicebear.com/9.x/thumbs/svg?seed=zahra' width='90'>
+            <h4 style='color:#0a66c2;'>Aulia Zahra</h4>
+            <p>NIM: K13xxxxx <br> Prodi: Pendidikan Matematika <br> Universitas: UNS</p>
         </div>
         """, unsafe_allow_html=True)
 
     with col2:
         st.markdown("""
-        <div class="profile-card">
-            <img src="https://api.dicebear.com/9.x/thumbs/svg?seed=arum" width="90">
-            <div class="creator-name">Arum Fajar R</div>
-            <p>NIM : K1323011
-            <br>Prodi : Pendidikan Matematika
-            <br>Universitas : UNS</p>
+        <div class='profile'>
+            <img src='https://api.dicebear.com/9.x/thumbs/svg?seed=teman' width='90'>
+            <h4 style='color:#0a66c2;'>Nama Temanmu</h4>
+            <p>NIM: K13xxxxx <br> Prodi: Pendidikan Matematika <br> Universitas: UNS</p>
         </div>
         """, unsafe_allow_html=True)
