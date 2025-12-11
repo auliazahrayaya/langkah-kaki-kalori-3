@@ -1,156 +1,154 @@
 import streamlit as st
-import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
+import pandas as pd
 
-# ---------------------- STYLING ----------------------
-st.set_page_config(page_title="DailyStep", layout="centered")
+# ===============================
+#  GLOBAL STYLING (Aesthetic Dark Mode)
+# ===============================
+st.set_page_config(page_title="DailyStep", page_icon="🦶", layout="centered")
 
-page_bg = """
+st.markdown("""
 <style>
-[data-testid="stAppViewContainer"] {
-    background-color: #0d0f1a;
-}
-h1, h2, h3, p, label {
-    color: #e8eaff !important;
-    font-family: 'Poppins', sans-serif;
-}
-.big-title {
-    font-size: 48px;
-    font-weight: 700;
-    background: linear-gradient(90deg, #6a5cff, #00d4ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-.card {
-    padding: 20px;
-    border-radius: 16px;
-    background: rgba(255,255,255,0.05);
-    box-shadow: 0px 0px 20px rgba(100,100,255,0.15);
-    margin-bottom: 20px;
-}
-button, .stButton>button {
-    background: linear-gradient(90deg, #6a5cff, #00d4ff) !important;
-    color: white !important;
-    border-radius: 10px !important;
-    border: none !important;
-}
+    body {background-color: #0d0f19;}
+    .main {background-color: #0d0f19;}
+    .title {
+        font-size: 38px; 
+        color: #8ab4f8; 
+        text-align: center; 
+        font-weight: 700;
+        margin-bottom: -10px;
+    }
+    .subtitle {
+        font-size: 17px;
+        color: #d1d5db;
+        text-align: center;
+        margin-bottom: 25px;
+    }
+    .card {
+        background: #111321;
+        padding: 18px 25px;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        border: 1px solid #2a2d3a;
+    }
 </style>
-"""
-st.markdown(page_bg, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 
-# ---------------------- SIDEBAR MENU ----------------------
+# ===============================
+#       SIDEBAR MENU
+# ===============================
 menu = st.sidebar.radio(
     "Menu",
-    ["Home", "Input Langkah", "Hasil Perhitungan", "Profile Creator"],
+    ["Home", "Input Langkah", "Profil Pembuat"],
     index=0
 )
 
-# Storage untuk antar menu
-if "steps" not in st.session_state:
-    st.session_state.steps = {}
 
-
-# ---------------------- HOME ----------------------
+# ===============================
+#             HOME
+# ===============================
 if menu == "Home":
-    st.markdown("<h1 class='big-title'>DailyStep</h1>", unsafe_allow_html=True)
-    st.write("Aplikasi sederhana untuk mencatat langkah harian, mengisi data yang hilang, dan menghitung kalori.")
-    st.write("")
-    st.write("Mulai catat langkahmu ✨")
+    st.markdown('<p class="title">DailyStep</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Lihat langkahmu, temukan langkah yang hilang, dan hitung kalorinya ✨</p>', unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="card">
+        <b>Apa yang bisa kamu lakukan di sini?</b>
+        <ul>
+            <li>Input jumlah langkah tiap jam</li>
+            <li>Kalau ada jam yang lupa dicatat, akan <i>diinterpolasi otomatis</i></li>
+            <li>Hitung total kalori harian</li>
+            <li>Lihat saran kesehatan berdasarkan kondisi tubuhmu</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
 
 
-# ---------------------- INPUT LANGKAH ----------------------
+# ===============================
+#       INPUT LANGKAH & INTERPOLASI
+# ===============================
 elif menu == "Input Langkah":
-    st.markdown("<h2>Input Langkah Per Jam</h2>", unsafe_allow_html=True)
 
-    st.write("Isi jumlah langkah pada jam tertentu. Kosongkan jika lupa — sistem akan mengisi otomatis.")
+    st.markdown('<p class="title">Input Langkah Harian</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Isi sesuai jam. Kosongkan kalau lupa, nanti aku interpolasi ✨</p>', unsafe_allow_html=True)
 
-    steps = {}
-    hours = [f"{h:02}:00" for h in range(6, 22)]
+    # Jam 06:00–21:00
+    jam_list = [f"{h:02d}:00" for h in range(6, 22)]
 
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    for h in hours:
-        val = st.number_input(f"Jam {h}", min_value=0, max_value=30000, step=100, key=h)
-        steps[h] = None if val == 0 else val
-    st.markdown("</div>", unsafe_allow_html=True)
+    langkah_dict = {}
+    st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    if st.button("Simpan Data"):
-        st.session_state.steps = steps
-        st.success("Data berhasil disimpan! Lanjut ke 'Hasil Perhitungan'.")
+    for jam in jam_list:
+        val = st.number_input(f"Langkah di jam {jam}", min_value=0, value=None, step=1, key=jam)
+        langkah_dict[jam] = val
 
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------------- HASIL PERHITUNGAN ----------------------
-elif menu == "Hasil Perhitungan":
-    st.markdown("<h2>Hasil Perhitungan</h2>", unsafe_allow_html=True)
+    if st.button("Proses Data 🚀"):
 
-    if not st.session_state.steps:
-        st.warning("Belum ada data. Isi dulu menu 'Input Langkah'.")
-    else:
-        steps = st.session_state.steps.copy()
+        df = pd.DataFrame({
+            "jam": jam_list,
+            "langkah": list(langkah_dict.values())
+        })
 
-        # Convert to series for interpolation
-        s = pd.Series(steps)
-        s = s.replace({None: np.nan})
-        s_inter = s.interpolate(method="linear").fillna(method="bfill").fillna(method="ffill")
+        # Convert None → NaN
+        df["langkah"] = df["langkah"].astype("float")
 
-        total_steps = int(s_inter.sum())
-        calories = round(total_steps * 0.04, 2)  # 0.04 kcal per langkah (standar)
+        # Interpolasi linear
+        df["hasil"] = df["langkah"].interpolate(method="linear")
 
-        # Display
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.metric("Total Langkah Hari Ini", f"{total_steps:,}")
-        st.metric("Estimasi Kalori Terbakar", f"{calories} kcal")
-        st.markdown("</div>", unsafe_allow_html=True)
+        # Hitung total langkah
+        total_langkah = int(df["hasil"].sum())
 
-        # Simple Recommendation
-        rec = ""
-        if calories < 100:
-            rec = "Tubuhmu butuh lebih banyak bergerak hari ini."
-        elif calories < 250:
-            rec = "Lumayan! Jalan sedikit lagi biar lebih aktif."
-        elif calories < 400:
-            rec = "Keren! Aktivitasmu cukup sehat hari ini."
+        # Rumus kalori yang LOGIS
+        total_kalori = round(total_langkah * 0.04, 2)  # 0.04 kcal per step
+
+        st.success("Data berhasil diproses!")
+
+        # Tampilkan tabel
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.write("Hasil interpolasi data langkah:")
+        st.dataframe(df)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # Summary Kalori
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.subheader("📊 Ringkasan Hari Ini")
+        st.write(f"• Total langkah: **{total_langkah} langkah**")
+        st.write(f"• Perkiraan kalori terbakar: **{total_kalori} kcal**")
+
+        # Saran kesehatan
+        st.subheader("💡 Saran kesehatan")
+        if total_kalori < 150:
+            st.write("Kamu kurang bergerak hari ini. Coba jalan santai bentar yuk! 🚶‍♀️")
+        elif total_kalori < 350:
+            st.write("Aktivitasmu oke! Tetap pertahankan 💪")
         else:
-            rec = "Bagus banget! Jangan lupa minum air dan istirahat."
-
-        st.info(rec)
-
-        # Graph
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=s_inter.index,
-            y=s_inter.values,
-            mode="lines+markers",
-            line=dict(width=3),
-        ))
-        fig.update_layout(
-            paper_bgcolor="#0d0f1a",
-            plot_bgcolor="#0d0f1a",
-            font=dict(color="white"),
-            title="Grafik Langkah per Jam (Interpolasi Otomatis)"
-        )
-        st.plotly_chart(fig, use_container_width=True)
+            st.write("Keren! Kamu sangat aktif hari ini 🔥🔥 Tapi jangan lupa istirahat juga ya!")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
-# ---------------------- PROFILE CREATOR ----------------------
-elif menu == "Profile Creator":
-    st.markdown("<h2>Profile Creator</h2>", unsafe_allow_html=True)
+# ===============================
+#          PROFIL PEMBUAT
+# ===============================
+elif menu == "Profil Pembuat":
 
-    col1, col2 = st.columns(2)
+    st.markdown('<p class="title">Creator</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Profile Creator ✨</p>', unsafe_allow_html=True)
 
-    with col1:
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.subheader("Aulia Zahra")
-        st.write("NIM: 123456789")  
-        st.write("Prodi: Teknik Industri")
-        st.write("Universitas: Nama Kampus")
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("""
+        <div class="card">
+            <b>👤 Aulia Zahra </b><br>
+            NIM: K1323015 <br>
+            Prodi: Pendidikan Matematika <br>
+            Universitas Seblas Maret (UNS)
+        </div>
 
-    with col2:
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.subheader("Teman Zahra")
-        st.write("NIM: 987654321")
-        st.write("Prodi: Teknik Industri")
-        st.write("Universitas: Nama Kampus")
-        st.markdown("</div>", unsafe_allow_html=True)
+        <div class="card">
+            <b>👤 Arum Fajar R</b><br>
+            NIM: K1323011 <br>
+            Prodi: Pendidikan Matematika <br>
+            Universitas Sebelas Maret (UNS)
+        </div>
+    """, unsafe_allow_html=True)
