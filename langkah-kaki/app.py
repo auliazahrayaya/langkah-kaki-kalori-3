@@ -177,11 +177,11 @@ elif menu == "Profil Pembuat":
     with col1:
         st.markdown("""
         <div class="profile-card">
-            <h3 style="color:#ff4f9a;">Aulia Zahra Yaya</h3>
+            <h3 style="color:#ff4f9a;">Aulia Zahra</h3>
             <p style="color:#633d52;">
-                NIM: 22040005 <br>
-                Prodi: Matematika <br>
-                Universitas X
+                NIM: K1323015 <br>
+                Prodi: Pendidikan Matematika <br>
+                Universitas Sebelas Maret (UNS)
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -189,11 +189,12 @@ elif menu == "Profil Pembuat":
     with col2:
         st.markdown("""
         <div class="profile-card">
-            <h3 style="color:#ff4f9a;">Nama Temanmu</h3>
+            <h3 style="color:#ff4f9a;">Arum Fajar R</h3>
             <p style="color:#633d52;">
-                NIM: 220400XX <br>
-                Prodi: Matematika <br>
-                Universitas X
+                NIM: K1323011 <br>
+                Prodi: Pendidikan Matematika <br>
+                Universitas Sebelas Maret (UNS)
             </p>
         </div>
         """, unsafe_allow_html=True)
+
