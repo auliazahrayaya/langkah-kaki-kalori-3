@@ -36,13 +36,13 @@ menu = st.sidebar.radio(
 # =========================
 if menu == "Home":
     st.markdown('<p class="title">DailyStep</p>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">Catat langkahmu per jam dengan cara yang menyenangkan 💙</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Ayo Track Langkah mu! 💙</p>', unsafe_allow_html=True)
     st.markdown("""
     <div class="hero">
         <img src="https://cdn-icons-png.flaticon.com/512/869/869869.png" width="100">
         <h3 style="color:#0a4fa3; font-size:26px; margin-top:10px;">Halo!</h3>
-        <p style="color:#3c5f8a; font-size:17px;">Pilih jam dan masukkan langkahmu. Jam kosong akan diisi otomatis 😄</p>
-        <p style="color:#0a4fa3; font-size:16px; margin-top:10px;">Mulai dari menu di sebelah kiri 💙</p>
+        <p style="color:#3c5f8a; font-size:17px;">Pilih jam dan masukkan langkahmu 😄</p>
+        <p style="color:#0a4fa3; font-size:16px; margin-top:10px;">Klik menu sebelah kiri! 💙</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -134,4 +134,5 @@ elif menu == "Profile Creator":
             <p>NIM: K1323011<br>Prodi: Pendidikan Matematika<br>UNS</p>
         </div>
         """, unsafe_allow_html=True)
+
 
