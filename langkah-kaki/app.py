@@ -79,36 +79,56 @@ elif menu == "Count Your Calories":
     st.markdown('<p class="title">Count Your Calories</p>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">Langkah hilang otomatis diisi 💙</p>', unsafe_allow_html=True)
 
-    if "steps" not in st.session_state:
+    # Cek apakah user sudah input data
+    if "steps" not in st.session_state or all(v is None for v in st.session_state["steps"].values()):
         st.warning("Isi langkahmu dulu di menu 'Input Your Step'.")
+        st.stop()
+
+    # Buat dataframe
+    df = pd.DataFrame({
+        "Jam": [f"{h:02d}:00" for h in range(6, 25)],
+        "Langkah": list(st.session_state["steps"].values())
+    })
+
+    # Ubah None → NaN supaya bisa diinterpolasi
+    df["Langkah"] = df["Langkah"].replace({None: np.nan}).astype(float)
+
+    # Cegah error: kalau semua NaN, interpolasi tidak mungkin dilakukan
+    if df["Langkah"].notna().sum() < 2:
+        st.error("Minimal butuh 2 data langkah untuk interpolasi.")
+        st.stop()
+
+    # Interpolasi linearnya
+    df["Interpolated"] = df["Langkah"].interpolate(method="linear")
+
+    # Ambil hanya jam yang awalnya kosong
+    missing_filled = df[df["Langkah"].isna()][["Jam", "Interpolated"]]
+
+    if missing_filled.empty:
+        st.success("Tidak ada langkah yang hilang hari ini 💙")
     else:
-        df = pd.DataFrame({
-            "Jam": [f"{h:02d}:00" for h in range(6, 25)],
-            "Langkah": list(st.session_state["steps"].values())
-        })
-        df["Langkah"] = df["Langkah"].replace({None: np.nan}).astype("float")
-        df["Interpolated"] = df["Langkah"].interpolate(method="linear")
+        st.subheader("Langkah hilang yang diisi otomatis")
+        st.dataframe(
+            missing_filled.rename(columns={"Interpolated": "Langkah (Hasil Interpolasi)"})
+        )
 
-        # Hanya tampilkan jam yang awalnya kosong
-        missing_filled = df[df["Langkah"].isna()]
-        if not missing_filled.empty:
-            st.subheader("Langkah hilang yang diisi otomatis")
-            st.dataframe(missing_filled[["Jam","Interpolated"]].rename(columns={"Interpolated":"Langkah"}))
+    # Hitung langkah terakhir (bukan total)
+    last_steps = df["Interpolated"].dropna().iloc[-1]
+    calories = round(last_steps * 0.04, 2)
 
-        # Total langkah = jam terakhir yang terisi
-        last_steps = df["Interpolated"].dropna().iloc[-1]
-        calories = round(last_steps * 0.04, 2)
+    # BOX Kalori + Saran
+    st.markdown("<div class='hero'>", unsafe_allow_html=True)
+    st.write(f"**Langkah terakhir (hari ini):** {int(last_steps):,}")
+    st.write(f"**Kalori perkiraan:** {calories} kkal")
 
-        st.markdown("<div class='hero'>", unsafe_allow_html=True)
-        st.write(f"**Langkah terakhir (hari ini):** {int(last_steps):,}")
-        st.write(f"**Kalori perkiraan:** {calories} kkal")
-        if calories < 80:
-            st.info("🌥 Jalan sedikit atau istirahat sebentar 💙")
-        elif calories < 200:
-            st.success("🌿 Aktivitasmu oke! Jangan lupa makan bergizi 💙")
-        else:
-            st.success("🔥 Kamu aktif banget hari ini! Minum air yang cukup 💧")
-        st.markdown("</div>", unsafe_allow_html=True)
+    if calories < 80:
+        st.info("🌥 Kamu kurang bergerak, jalan santai 5 menit yuk 💙")
+    elif calories < 200:
+        st.success("🌿 Mantap! Aktivitasmu seimbang hari ini 💙")
+    else:
+        st.success("🔥 Kamu aktif banget hari ini! Jangan lupa minum 💧")
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================
 # PROFILE CREATOR
@@ -134,5 +154,6 @@ elif menu == "Profile Creator":
             <p>NIM: K1323011<br>Prodi: Pendidikan Matematika<br>UNS</p>
         </div>
         """, unsafe_allow_html=True)
+
 
 
